@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func NewConfig(path string, jsonData string) error {
+func NewConfig[Config any](path string, jsonData Config) error {
 	root := os.Getenv("HOME") + "/.config"
 
 	configDir := root + path
@@ -22,7 +22,13 @@ func NewConfig(path string, jsonData string) error {
 		return createErr
 	}
 
-	if _, writeErr := file.WriteString(jsonData); writeErr != nil {
+	data, jsonErr := json.Marshal(jsonData)
+
+	if jsonErr != nil {
+		return jsonErr
+	}
+
+	if _, writeErr := file.Write(data); writeErr != nil {
 		fmt.Println("Failed to write to config.")
 		return writeErr
 	}
@@ -31,10 +37,14 @@ func NewConfig(path string, jsonData string) error {
 
 func GetConfig[Config any](path string, c *Config) error {
 
-	data, err := os.ReadFile(path)
+	root := os.Getenv("HOME") + "/.config"
+
+	configDir := root + path + "/config.json"
+
+	data, err := os.ReadFile(configDir)
 
 	if err != nil {
-		fmt.Printf("Could not read file at %s \n", path)
+		fmt.Printf("Could not read file at %s \n", configDir)
 		return err
 	}
 
